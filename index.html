@@ -21,6 +21,11 @@
             width: 100%;
             height: 100vh;
         }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex justify-center items-center flex-col">
@@ -31,7 +36,7 @@
 <!-- Barcode Scanner -->
 <div id="scanner" class="scanner-container">
     <div class="scanner-border"></div>
-    <video id="video" width="100%" height="100%" autoplay></video>
+    <video id="video" autoplay></video>
 </div>
 
 <!-- Alert Section -->
@@ -48,6 +53,9 @@
     let alertElement = document.getElementById("alert");
     let alertMessage = document.getElementById("alert-message");
     const scanSound = document.getElementById("scan-sound");
+
+    // Initialize the video feed only once
+    let videoStarted = false;
 
     // Check if camera permission has already been granted
     if (!localStorage.getItem("cameraPermission")) {
@@ -74,20 +82,28 @@
     const codeReader = new ZXing.BrowserBarcodeReader();
 
     async function startScanning() {
-        videoElement.onloadedmetadata = () => {
-            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-                if (result) {
-                    const barcode = result.text;
-                    playScanSound();
-                    checkBarcode(barcode);
-                } else if (err) {
-                    console.error("Error scanning the barcode:", err);
-                    alertMessage.textContent = `Error scanning the barcode: ${err}`;
-                    alertElement.classList.remove("opacity-0");
-                    alertElement.classList.add("opacity-100");
-                }
-            });
-        };
+        if (!videoStarted) {
+            // Start video feed when the button is clicked
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            videoElement.srcObject = stream;
+            videoStarted = true;
+        }
+
+        // Start scanning once video feed is established
+        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+            if (result) {
+                const barcode = result.text;
+                playScanSound();
+                checkBarcode(barcode);
+            } else if (err && err instanceof ZXing.NotFoundException) {
+                console.warn("Barcode not detected. Please try again.");
+            } else if (err) {
+                console.error("Error scanning the barcode:", err);
+                alertMessage.textContent = `Error scanning the barcode: ${err.message}`;
+                alertElement.classList.remove("opacity-0");
+                alertElement.classList.add("opacity-100");
+            }
+        });
     }
 
     // Play Scan Sound
