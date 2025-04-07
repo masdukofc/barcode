@@ -37,7 +37,7 @@
 </div>
 
 <!-- Audio for Barcode Scan -->
-<audio id="scan-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+<audio id="scan-sound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
 
 <script>
     const scannedBarcodes = ["5449000000996"];  // Example barcode list (Israeli product)
@@ -56,6 +56,7 @@
 
                 // Mark camera permission as granted
                 localStorage.setItem("cameraPermission", "granted");
+                startScanning(); // Start scanning after camera access is granted
             } catch (error) {
                 console.error("Error accessing camera:", error);
                 alertMessage.textContent = `Camera access error: ${error.message}`;
