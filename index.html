@@ -23,7 +23,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 flex justify-center items-center">
+<body class="bg-gray-100 flex justify-center items-center flex-col">
+
+<!-- Scan Button -->
+<button id="scanButton" class="btn btn-primary mb-4">Start Scanning</button>
 
 <!-- Barcode Scanner -->
 <div id="scanner" class="scanner-container">
@@ -56,7 +59,6 @@
 
                 // Mark camera permission as granted
                 localStorage.setItem("cameraPermission", "granted");
-                startScanning(); // Start scanning after camera access is granted
             } catch (error) {
                 console.error("Error accessing camera:", error);
                 alertMessage.textContent = `Camera access error: ${error.message}`;
@@ -66,27 +68,26 @@
         }
 
         setupCamera();
-    } else {
-        // If permission is already granted, directly start scanning
-        startScanning();
     }
 
     // Barcode Scanning with ZXing Library
     const codeReader = new ZXing.BrowserBarcodeReader();
 
     async function startScanning() {
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-            if (result) {
-                const barcode = result.text;
-                playScanSound();
-                checkBarcode(barcode);
-            } else if (err) {
-                console.error("Error scanning the barcode:", err);
-                alertMessage.textContent = `Error scanning the barcode: ${err.message}`;
-                alertElement.classList.remove("opacity-0");
-                alertElement.classList.add("opacity-100");
-            }
-        });
+        videoElement.onloadedmetadata = () => {
+            codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+                if (result) {
+                    const barcode = result.text;
+                    playScanSound();
+                    checkBarcode(barcode);
+                } else if (err) {
+                    console.error("Error scanning the barcode:", err);
+                    alertMessage.textContent = `Error scanning the barcode: ${err}`;
+                    alertElement.classList.remove("opacity-0");
+                    alertElement.classList.add("opacity-100");
+                }
+            });
+        };
     }
 
     // Play Scan Sound
@@ -113,10 +114,12 @@
         }, 3000);
     }
 
-    // Start Scanning on page load
-    window.onload = () => {
-        startScanning();
-    };
+    // Event Listener for Scan Button
+    document.getElementById("scanButton").addEventListener("click", () => {
+        startScanning();  // Start scanning when the button is clicked
+        document.getElementById("scanButton").disabled = true;  // Disable the button once clicked
+        document.getElementById("scanButton").textContent = "Scanning...";  // Update button text
+    });
 </script>
 </body>
 </html>
