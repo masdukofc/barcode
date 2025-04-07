@@ -36,21 +36,15 @@
     <span id="alert-message">Scanning...</span>
 </div>
 
-<!-- Admin Panel (Framer Dashboard) -->
-<div class="absolute top-4 right-4 p-4 bg-white shadow-lg rounded-lg">
-    <h2 class="text-xl font-semibold mb-4">Admin Barcode Management</h2>
-    <input type="file" id="bulk-upload" class="mb-4 border p-2 rounded" />
-    <div class="space-y-2">
-        <button id="add-barcode" class="btn btn-primary w-full">Add Barcode</button>
-        <button id="remove-barcode" class="btn btn-danger w-full">Remove Barcode</button>
-    </div>
-</div>
+<!-- Audio for Barcode Scan -->
+<audio id="scan-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
 
 <script>
     const scannedBarcodes = ["5449000000996"];  // Example barcode list (Israeli product)
     let videoElement = document.getElementById("video");
     let alertElement = document.getElementById("alert");
     let alertMessage = document.getElementById("alert-message");
+    const scanSound = document.getElementById("scan-sound");
 
     // Request Camera Access
     async function setupCamera() {
@@ -72,13 +66,20 @@
         codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
             if (result) {
                 const barcode = result.text;
+                playScanSound();
                 checkBarcode(barcode);
             } else if (err) {
+                console.error("Error scanning the barcode:", err);
                 alertMessage.textContent = "Error scanning the barcode.";
                 alertElement.classList.remove("opacity-0");
                 alertElement.classList.add("opacity-100");
             }
         });
+    }
+
+    // Play Scan Sound
+    function playScanSound() {
+        scanSound.play();
     }
 
     // Check Barcode against Israeli product list
@@ -99,28 +100,6 @@
             alertElement.classList.add("opacity-0");
         }, 3000);
     }
-
-    // Admin Panel Barcode Management
-    document.getElementById("add-barcode").addEventListener("click", () => {
-        const barcode = prompt("Enter Barcode to Add");
-        if (barcode && !scannedBarcodes.includes(barcode)) {
-            scannedBarcodes.push(barcode);
-            alert("Barcode Added!");
-        } else {
-            alert("Barcode is already in the list or invalid.");
-        }
-    });
-
-    document.getElementById("remove-barcode").addEventListener("click", () => {
-        const barcode = prompt("Enter Barcode to Remove");
-        const index = scannedBarcodes.indexOf(barcode);
-        if (index > -1) {
-            scannedBarcodes.splice(index, 1);
-            alert("Barcode Removed!");
-        } else {
-            alert("Barcode not found.");
-        }
-    });
 
     // Start Scanning on page load
     window.onload = () => {
